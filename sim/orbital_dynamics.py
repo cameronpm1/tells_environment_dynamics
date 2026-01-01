@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from typing import Any, Dict, Optional
 from mpl_toolkits.mplot3d import Axes3D
 
-from sim.base_dynamics import baseDynamics
+from tells_environment_dynamics.sim.base_dynamics import baseDynamics
 
 '''
 Orbital dynamics for satellite simulation (onlly for circular orbits)

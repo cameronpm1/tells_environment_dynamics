@@ -1,8 +1,8 @@
 import numpy as np
 from typing import Any, Dict, Optional
 
-from sim.satellite import Satellite
-from sim.orbital_dynamics import circularOrbit
+from tells_environment_dynamics.sim.satellite import Satellite
+from tells_environment_dynamics.sim.orbital_dynamics import circularOrbit
 
 '''
 Creates a satellite constellation based on the Phase 1 Starlink constellation, 

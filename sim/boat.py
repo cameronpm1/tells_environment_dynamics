@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Any, Dict, Optional
 
-from sim.boat_dynamics import boatDynamics
+from tells_environment_dynamics.sim.boat_dynamics import boatDynamics
 
 
 class Boat:
@@ -30,18 +30,18 @@ class Boat:
 
     def reset(
             self,
-            drone_data: Optional[dict[str,Any]]=None,
+            init_data: Optional[dict[str,Any]]=None,
     ):
         '''
         reset drone dynamics
 
         input
         -----
-        drone_data:Optional[dict[str,Any]]
+        init_data:Optional[dict[str,Any]]
             dictionary with initial state date to reset dynamics to
         '''
 
-        self.dynamics.reset(**drone_data)
+        self.dynamics.reset(init_data)
 
     def forward_step(self):
         '''
@@ -82,10 +82,14 @@ class Boat:
             requested attribut from dynamics object (pos,vel,quat,euler,omega,dcm,speed,A,B)
         '''
         if self.dynamics is not None:
-            func_name = 'get_' + attr
-            return getattr(self.dynamics, func_name)()
-        else:
-            print('Error:', self.name, 'is not provided in drone dynamics class')
+            try:
+                func_name = 'get_' + attr
+                return getattr(self.dynamics, func_name)()
+            except:
+                try:
+                    return getattr(self.dynamics, attr)
+                except:
+                    print('Error:', attr, 'is not provided in boat dynamics class')
 
     def delete(self) -> None:
 

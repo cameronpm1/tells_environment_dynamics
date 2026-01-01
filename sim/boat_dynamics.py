@@ -5,8 +5,8 @@ from scipy.integrate import odeint
 from matplotlib import pyplot as plt
 from typing import Any, Dict, Optional
 
-from sim.base_dynamics import baseDynamics
-from sim.orbital_dynamics import circularOrbit
+from tells_environment_dynamics.sim.base_dynamics import baseDynamics
+from tells_environment_dynamics.sim.orbital_dynamics import circularOrbit
 
 class boatDynamics(baseDynamics):
 
@@ -47,7 +47,7 @@ class boatDynamics(baseDynamics):
 
         #Additional spacecraft data initialization
         if inertial_data is not None:
-            self.I11 = inertial_data['J_b']
+            self.I11 = float(inertial_data['J_b'])
             self.mass = inertial_data['mass']
             self.l = inertial_data['length']
             self.kf = inertial_data['friction']
@@ -87,11 +87,26 @@ class boatDynamics(baseDynamics):
         dx/dt = Ax+Bu
         '''  
         B = np.zeros((self.state.size,self.control.size))
-        R = self.get_dcm()
-        B[2:4,0:2] = R/self.mass
+        #R = self.get_dcm()
+        #B[2:4,0:2] = R/self.mass
+        B[2,0] = 1/self.mass
+        B[3,1] = 1/self.mass
         B[5,2] = 1/self.I11
 
         return B
+    
+    @property
+    def T(self): 
+        '''   
+        Linear State Space Representation
+        dx/dt = Ax+Bu
+        '''  
+        T = np.zeros((self.control.size,self.control.size))
+        R = self.get_dcm()
+        T[0:2,0:2] = R
+        T[2,2] = 1.0
+
+        return T
 
     def initialize_state(self) -> None:
         self.state = np.concatenate((self.pos,self.vel,self.hdg,self.omega), axis=None)
@@ -115,13 +130,13 @@ class boatDynamics(baseDynamics):
         if initial_state_data is not None:
             self.pos = initial_state_data['position'] #m
             self.vel = initial_state_data['velocity'] #m/s
-            self.omega = initial_state_data['angular_velocity'] #rad/s
-            self.quat = initial_state_data['quaternion']
+            self.omega = initial_state_data['heading'] #rad/s
+            self.quat = initial_state_data['angular_velocity']
         else:
-            self.pos = self.initial_state[0:3]
-            self.vel = self.initial_state[3:6]
-            self.omega = self.initial_state[6:9]
-            self.quat = self.initial_state[9:13]
+            self.pos = self.initial_state[0:2]
+            self.vel = self.initial_state[2:4]
+            self.hdg = self.initial_state[5]
+            self.omega = self.initial_state[6]
         self.initialize_state()
 
     def set_control(
@@ -129,15 +144,15 @@ class boatDynamics(baseDynamics):
             control: list[float],
     ) -> None:
         '''
-        takes input in drone motor speeds and returns control in 3 moments and thrust
+        takes input in boat thrust and change in heading
 
         input
         -----
         control:list[float]
-            control = [w1, w2, w3, w4]
+            control = [T, 0, delta_hdg]
         '''
         self.control[0] = control[0]
-        self.control[2] = control[1]
+        self.state[4] += control[2]
             
     def compute_derivatives(
             self,
@@ -162,11 +177,18 @@ class boatDynamics(baseDynamics):
 
         state_matrix = self.A
         control_matrix = self.B
+        transform_matrix = self.T
+
+        #velocity cap
+        self.state[2:4] = np.clip(self.state[2:4],-15,15)
 
         # Compute state derivative
         dxdt = np.zeros_like(self.state)
-        dxdt = np.matmul(state_matrix, self.state) + np.squeeze(np.matmul(control_matrix, self.control))
+        dxdt = np.matmul(state_matrix, self.state) + np.squeeze(np.matmul(control_matrix, np.matmul(transform_matrix,self.control)))
 
+        #velocity cap
+        self.state[2:4] = np.clip(self.state[2:4],-15,15)
+        
         return dxdt
     
     def forward_step(self) -> list[float]:
@@ -192,8 +214,8 @@ class boatDynamics(baseDynamics):
         # Update the current time and state to the last state in the solution
         self.time += self.timestep * self.horizon
         self.state = sol[-1]  # update state
-        
-        return sol
+
+        return self.state
     
     #Methods to retrieve certain state variables
     def get_pos(self) -> list[float]:
@@ -241,7 +263,7 @@ class boatDynamics(baseDynamics):
         output
         ------
         list[list[float]]
-            3x3 3-2-1 DCM computed from quaternions
+            2x2 DCM computed from heading (rotation around z-axis)
         '''
         hdg = self.state[4]
 
@@ -251,6 +273,16 @@ class boatDynamics(baseDynamics):
         ])
 
         return dcm
+    
+    def get_state(self) -> list[float]:
+        '''
+        output
+        ------
+        list[float]
+            full state (6x1 matrix): [x,y,v_x,v_y,theta,theta_dot]
+        '''
+
+        return self.state
     
     def get_A(self):
         '''

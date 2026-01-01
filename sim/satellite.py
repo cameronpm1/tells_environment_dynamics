@@ -1,8 +1,8 @@
 import numpy as np
 from typing import Any, Dict, Optional
 
-from sim.cwh_dynamics import CWHDynamics
-from sim.orbital_dynamics import circularOrbit
+from tells_environment_dynamics.sim.cwh_dynamics import CWHDynamics
+from tells_environment_dynamics.sim.orbital_dynamics import circularOrbit
 
 
 class Satellite:

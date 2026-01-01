@@ -2,16 +2,16 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sim.boat import Boat
-from sim.drone import Drone
-from sim.sim_plot import Renderer3D
-from sim.sim_plot import Renderer2D
-from sim.satellite import Satellite
-from sim.cwh_dynamics import CWHDynamics
-from sim.boat_dynamics import boatDynamics
-from sim.constellation import Constellation
-from sim.drone_dynamics import droneDynamics
-from sim.orbital_dynamics import circularOrbit
+from tells_environment_dynamics.sim.boat import Boat
+from tells_environment_dynamics.sim.drone import Drone
+from tells_environment_dynamics.sim.sim_plot import Renderer3D
+from tells_environment_dynamics.sim.sim_plot import Renderer2D
+from tells_environment_dynamics.sim.satellite import Satellite
+from tells_environment_dynamics.sim.cwh_dynamics import CWHDynamics
+from tells_environment_dynamics.sim.boat_dynamics import boatDynamics
+from tells_environment_dynamics.sim.constellation import Constellation
+from tells_environment_dynamics.sim.drone_dynamics import droneDynamics
+from tells_environment_dynamics.sim.orbital_dynamics import circularOrbit
 
 box_points = np.array([
     [-0.5, -0.5, -0.5],
@@ -158,8 +158,8 @@ def make_boat(
 
     #create drone dynamics object 
     initial_state_data = {
-        'position': np.array([0.0, 0.0, 0.0]),
-        'velocity': np.array([0.0, 0.0, 0.0]),
+        'position': np.array([0.0, 0.0]),
+        'velocity': np.array([0.0, 0.0]),
         'heading': np.array([0.0]),
         'angular_velocity': np.array([0.0]),
     }
@@ -167,7 +167,7 @@ def make_boat(
         'J_b': 3e4,
         'mass': 4000,
         'length' : 10,
-        'friction' : 0.01,
+        'friction' : 0.05,
     }
     dynamics = boatDynamics(
         inertial_data=inertial_data,
@@ -378,7 +378,7 @@ def test_boat_dynamics():
     plot_data = {}
     plot_data['lines'] = boat_lines
     plot_data['points'] = boat_points
-    boat.set_ctrl([50.0, 60.0])
+    boat.set_ctrl([50.0, 0.0, np.pi/4])
 
     #start plotter
     renderer = Renderer2D(xlim=[-60, 60], ylim=[-60, 60])  
@@ -386,7 +386,7 @@ def test_boat_dynamics():
 
     for i in range(steps):
         if i == 20:
-            boat.set_ctrl([0.0,0])
+            boat.set_ctrl([0.0,0.0,0.0])
         #forward step and point computation
         boat.forward_step()
         pos = boat.get_local_attr('pos')

@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Any, Dict, Optional
 
-from sim.drone_dynamics import droneDynamics
+from tells_environment_dynamics.sim.drone_dynamics import droneDynamics
 
 
 class Drone:

@@ -5,8 +5,8 @@ from scipy.integrate import odeint
 from matplotlib import pyplot as plt
 from typing import Any, Dict, Optional
 
-from sim.base_dynamics import baseDynamics
-from sim.orbital_dynamics import circularOrbit
+from tells_environment_dynamics.sim.base_dynamics import baseDynamics
+from tells_environment_dynamics.sim.orbital_dynamics import circularOrbit
 
 class droneDynamics(baseDynamics):
 
