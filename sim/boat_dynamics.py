@@ -130,13 +130,13 @@ class boatDynamics(baseDynamics):
         if initial_state_data is not None:
             self.pos = initial_state_data['position'] #m
             self.vel = initial_state_data['velocity'] #m/s
-            self.omega = initial_state_data['heading'] #rad/s
-            self.quat = initial_state_data['angular_velocity']
+            self.hdg = initial_state_data['heading'] #rad
+            self.omega = initial_state_data['angular_velocity'] #rad/s
         else:
             self.pos = self.initial_state[0:2]
             self.vel = self.initial_state[2:4]
-            self.hdg = self.initial_state[5]
-            self.omega = self.initial_state[6]
+            self.hdg = self.initial_state[4]
+            self.omega = self.initial_state[5]
         self.initialize_state()
 
     def set_control(
@@ -188,7 +188,7 @@ class boatDynamics(baseDynamics):
 
         #velocity cap
         self.state[2:4] = np.clip(self.state[2:4],-15,15)
-        
+
         return dxdt
     
     def forward_step(self) -> list[float]:

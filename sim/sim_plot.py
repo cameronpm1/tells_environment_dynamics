@@ -43,17 +43,23 @@ class Renderer3D:
          plt.draw()
          plt.pause(0.01)
 
+     def get_rgb(self):
+
+         image = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
+         image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
+
+         return image
+
 #Clean up code attempt:
 class Renderer2D:
-     def __init__(self, xlim, ylim):
+     def __init__(self, xlim, ylim, render=True):
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot()
         self.xlim = xlim
         self.ylim = ylim
         self.ax.set_xlim(xlim)
         self.ax.set_ylim(ylim)
-        self.lines_collection = None  # Store the Line3DCollection
-        self.points_collection = None  # Store the scatter points
+        self.render = True
 
      def clear(self):
         #Clear the current axes while preserving limits.
@@ -61,20 +67,29 @@ class Renderer2D:
         self.ax.set_xlim(self.xlim)
         self.ax.set_ylim(self.ylim)
 
-     def plot(self,object_data):
+     def plot(self,object_data,pause=0.01):
          #self.ax.clear() #Clear previous plots
          points = object_data['points']
          lines = object_data['lines']
+         colors = object_data['colors']
 
-         for line in lines:
+         for i,line in enumerate(lines):
             self.ax.plot([points[line[0]][0],points[line[1]][0]],
-                         [points[line[0]][1],points[line[1]][1]], color="k")
+                         [points[line[0]][1],points[line[1]][1]], color=colors[i])
          
          self.ax.set_xlabel('X')
          self.ax.set_ylabel('Y')
          
          plt.draw()
+         #if self.render:
          plt.pause(0.01)
+
+     def get_rgb(self):
+
+         image = np.frombuffer(self.fig.canvas.tostring_argb(), dtype=np.uint8)
+         image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (4,))
+
+         return image
          
      
 def main():
